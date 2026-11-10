@@ -75,10 +75,9 @@ def test_userinfo_unauthorized(client: flask.testing.FlaskClient):
     assert response.json == {"error": "unsupported_token_type"}
 
     response = client.get("/userinfo", headers={"authorization": "Bearer foo"})
-    # Should be `HTTPStatus.UNAUTHORIZED` but there is a bug in authlib
-    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json
-    assert response.json["error"] == "access_denied"
+    assert response.json["error"] == "invalid_token"
 
 
 def test_consistent_kwargs():

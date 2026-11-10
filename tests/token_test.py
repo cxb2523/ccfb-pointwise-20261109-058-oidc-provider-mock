@@ -45,7 +45,8 @@ def test_refresh_token_rotates_access_token(oidc_server: str):
     # Using a refresh token revokes the old access token
     with pytest.raises(httpx2.HTTPStatusError) as e:
         client.fetch_userinfo(token=token_data.access_token)
-    assert e.value.response.json()["error"] == "access_denied"
+    assert e.value.response.status_code == 401
+    assert e.value.response.json()["error"] == "invalid_token"
 
     client.fetch_userinfo(token=refresh_token_data.access_token)
 
@@ -104,7 +105,8 @@ def test_revoke_tokens(oidc_server: str):
 
     with pytest.raises(httpx2.HTTPStatusError) as e:
         client.fetch_userinfo(token=token_data.access_token)
-    assert e.value.response.json()["error"] == "access_denied"
+    assert e.value.response.status_code == 401
+    assert e.value.response.json()["error"] == "invalid_token"
 
     assert token_data.refresh_token is not None
     with pytest.raises(OAuthError, match="invalid_grant: invalid refresh token"):

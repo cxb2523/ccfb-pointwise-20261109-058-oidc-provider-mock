@@ -4,7 +4,9 @@ import pytest
 from playwright.sync_api import Page
 
 # With the default method "forkserver" pytest-flask throws an error.
-multiprocessing.set_start_method("fork")
+# "fork" is not available on all platforms (e.g. Windows).
+if "fork" in multiprocessing.get_all_start_methods():
+    multiprocessing.set_start_method("fork")
 
 
 @pytest.fixture

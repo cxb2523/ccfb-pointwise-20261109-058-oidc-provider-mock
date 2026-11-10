@@ -16,7 +16,7 @@ def main():
 
     template = template_path.read_text()
 
-    with output_path.open("w") as output:
+    with output_path.open("w", newline="\n") as output:
         output.write("<!-- THIS FILE HAS BEEN GENERATED FROM REAMDE.md.tpl -->\n")
         output.write(re.sub(r"SNIPPET (\S+)", replace, template))
 

@@ -1,3 +1,4 @@
+import threading
 from collections import deque
 from collections.abc import Collection, Iterable, Sequence
 from dataclasses import dataclass, field
@@ -184,6 +185,8 @@ class Storage:
     _clients: dict[str, Client]
     _users: dict[str, User]
     _authorization_codes: dict[str, AuthorizationCode]
+    _consumed_authorization_codes: dict[str, AuthorizationCode]
+    _access_token_to_code: dict[str, str]
     _access_tokens: dict[str, AccessToken]
     _refresh_tokens: dict[str, RefreshToken]
     _nonces: set[str]
@@ -194,10 +197,13 @@ class Storage:
         self._clients = {}
         self._users = {}
         self._authorization_codes = {}
+        self._consumed_authorization_codes = {}
+        self._access_token_to_code = {}
         self._access_tokens = {}
         self._refresh_tokens = {}
         self._nonces = set()
         self._recent_subjects = deque()
+        self._lock = threading.Lock()
 
     # User
 
@@ -234,6 +240,42 @@ class Storage:
     def remove_authorization_code(self, code: str) -> AuthorizationCode | None:
         return self._authorization_codes.pop(code, None)
 
+    def consume_authorization_code(self, code: str) -> AuthorizationCode | None:
+        """Atomically take ``code`` out of circulation and return it.
+
+        Returns ``None`` if the code is unknown. If the code was already
+        consumed before (replay), all tokens that were issued for it are
+        revoked and ``None`` is returned. This guarantees that only one of
+        any number of concurrent exchanges of the same code can succeed.
+        """
+        with self._lock:
+            auth_code = self._authorization_codes.pop(code, None)
+            if auth_code is not None:
+                self._consumed_authorization_codes[code] = auth_code
+                return auth_code
+
+            if code in self._consumed_authorization_codes:
+                self._revoke_tokens_issued_for_code(code)
+            return None
+
+    def associate_access_token_with_code(self, code: str, access_token: str):
+        """Record that ``access_token`` was issued in exchange for ``code``."""
+        with self._lock:
+            self._access_token_to_code[access_token] = code
+
+    def _revoke_tokens_issued_for_code(self, code: str):
+        access_tokens = [
+            token
+            for token, token_code in self._access_token_to_code.items()
+            if token_code == code
+        ]
+        for access_token in access_tokens:
+            self._access_tokens.pop(access_token, None)
+            del self._access_token_to_code[access_token]
+            for refresh_token in list(self._refresh_tokens.values()):
+                if refresh_token.access_token == access_token:
+                    self._refresh_tokens.pop(refresh_token.token, None)
+
     # AccessTokens
 
     def get_access_token(self, token: str) -> AccessToken | None:
@@ -243,6 +285,7 @@ class Storage:
         self._access_tokens[access_token.token] = access_token
 
     def remove_access_token(self, access_token: str) -> AccessToken | None:
+        self._access_token_to_code.pop(access_token, None)
         return self._access_tokens.pop(access_token, None)
 
     def access_tokens(self) -> Iterable[AccessToken]:

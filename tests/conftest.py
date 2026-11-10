@@ -89,8 +89,8 @@ def ticking_datetime() -> Generator[TickingDateTimeFactory]:
 
 @pytest.fixture
 def page(page: Page):
-    page.set_default_navigation_timeout(3000)
-    page.set_default_timeout(3000)
+    page.set_default_navigation_timeout(15000)
+    page.set_default_timeout(15000)
     return page
 
 

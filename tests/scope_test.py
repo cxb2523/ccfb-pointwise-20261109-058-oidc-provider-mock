@@ -12,7 +12,7 @@ faker = Faker()
 def test_openid_scope_required(oidc_server: str):
     state = faker.password()
 
-    client = fake_client(oidc_server, scope="foo bar")
+    client = fake_client(oidc_server, scope="email")
 
     response = httpx2.post(
         client.authorization_url(state=state),
@@ -49,14 +49,14 @@ def test_scope_capped_to_client_registration(oidc_server: str):
 
     client = OidcClient.register(
         oidc_server,
-        scope="openid other",
+        scope="openid email",
         redirect_uri=faker.uri(schemes=["https"]),
     )
 
     response = httpx2.post(
-        client.authorization_url(state=state, scope="openid other notallowed"),
+        client.authorization_url(state=state, scope="openid email phone"),
         data={"sub": faker.email()},
     )
 
     token_data = client.fetch_token(response.headers["location"], state)
-    assert token_data.scope == "openid other"
+    assert token_data.scope == "openid email"

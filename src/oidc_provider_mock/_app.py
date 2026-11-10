@@ -52,7 +52,9 @@ class TokenValidator(authlib.oauth2.rfc6750.BearerTokenValidator):
     def authenticate_token(self, token_string: str):
         token = storage.get_access_token(token_string)
         if not token:
-            raise authlib.oauth2.rfc6749.AccessDeniedError()
+            # Unknown, revoked or otherwise invalid tokens must result in
+            # 401 `invalid_token` per RFC 6750 §3.1.
+            raise authlib.oauth2.rfc6750.InvalidTokenError()
 
         return token
 
@@ -64,7 +66,10 @@ class AuthorizationCodeGrant(authlib.oauth2.rfc6749.AuthorizationCodeGrant):
     def query_authorization_code(  # pyright: ignore[reportIncompatibleMethodOverride]
         self, code: str, client: Client
     ) -> AuthorizationCode | None:
-        auth_code = storage.get_authorization_code(code)
+        # Consume the code atomically so that it cannot be exchanged twice,
+        # not even by concurrent requests. A replay also revokes the tokens
+        # issued by the first exchange (see `Storage.consume_authorization_code`).
+        auth_code = storage.consume_authorization_code(code)
         if auth_code and auth_code.client_id == client.get_client_id():
             return auth_code
 
@@ -250,6 +255,11 @@ def setup(setup_state: flask.blueprints.BlueprintSetupState):
         "refresh_token": int(config.access_token_max_age.total_seconds()),
     }
 
+    # Reject authorization requests for scopes the provider does not support
+    # with an `invalid_scope` error redirect instead of silently narrowing
+    # the scope.
+    setup_state.app.config["OAUTH2_SCOPES_SUPPORTED"] = list(Client.SCOPES_SUPPORTED)
+
     setup_state.app.config["OAUTH2_REFRESH_TOKEN_GENERATOR"] = (
         config.issue_refresh_token
     )
@@ -296,6 +306,15 @@ def setup(setup_state: flask.blueprints.BlueprintSetupState):
                 expires_at=datetime.now(UTC) + timedelta(seconds=token["expires_in"]),
             )
         )
+
+        # Link the token to the authorization code it was issued for so that
+        # a replayed code exchange can revoke it. (The refresh token grant
+        # sets a placeholder authorization code with an empty `code`.)
+        authorization_code = getattr(request, "authorization_code", None)
+        if isinstance(authorization_code, AuthorizationCode) and authorization_code.code:
+            storage.associate_access_token_with_code(
+                authorization_code.code, token["access_token"]
+            )
 
         if "refresh_token" in token:
             assert isinstance(token["refresh_token"], str)
@@ -576,7 +595,12 @@ def _validate_auth_request_client_params(
         description = e.description
         # FIXME: this is a brittle way of determining what the error is but
         # authlib does not raise a dedicated error in this case.
-        if description == "Redirect URI foo is not supported by client.":
+        if description.startswith("Redirect URI ") and description.endswith(
+            " is not supported by client."
+        ):
+            # The redirect URI is not registered for the client. We must not
+            # redirect back to it (that would be an open redirect) and render
+            # an error page instead.
             raise _AuthorizationValidationException(
                 authlib.oauth2.rfc6749.InvalidClientError.error,
                 description,

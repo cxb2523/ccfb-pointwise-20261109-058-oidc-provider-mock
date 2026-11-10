@@ -4,6 +4,7 @@
 """
 
 import logging
+import sys
 from pathlib import Path
 from urllib.parse import quote
 
@@ -16,6 +17,13 @@ from playwright.sync_api import Page, expect
 from pytest_flask.live_server import LiveServer
 
 import oidc_provider_mock
+
+# pytest-flask’s live_server runs the app in a subprocess with fork(),
+# which is not available on Windows.
+requires_fork = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="pytest-flask live_server requires fork(), unavailable on Windows",
+)
 
 
 def build_app(oidc_provider_url: str):
@@ -88,6 +96,7 @@ def test_auth_code_login(client: flask.testing.FlaskClient, oidc_server: str):
 # SNIPPET flask_test_login_playwright
 
 
+@requires_fork
 def test_auth_code_login_playwright(
     live_server: LiveServer, oidc_server: str, page: Page
 ):
@@ -112,6 +121,7 @@ def test_auth_code_login_playwright(
 # SNIPPET END
 
 
+@requires_fork
 def test_auth_denied_playwright(live_server: LiveServer, oidc_server: str, page: Page):
     """Test user denying authorization"""
 

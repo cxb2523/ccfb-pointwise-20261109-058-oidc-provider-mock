@@ -81,6 +81,7 @@ If you’re using [Playwright](https://playwright.dev) for end-to-end tests, a
 login test looks like this:
 
 ```python
+@requires_fork
 def test_auth_code_login_playwright(
     live_server: LiveServer, oidc_server: str, page: Page
 ):
