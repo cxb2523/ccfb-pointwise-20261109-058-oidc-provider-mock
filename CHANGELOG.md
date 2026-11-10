@@ -1,0 +1,121 @@
+# Changes
+
+## v0.4.8 - 2026-09-16
+
+- `auth_time` claim on refreshed ID token has the value of the original
+  authorization token.
+
+## v0.4.7 - 2026-09-16
+
+- Switch to `httpx2` from `httpx`
+- Send `state=` parameter on error responses and not only on authentication success.
+
+## v0.4.6 - 2026-06-29
+
+- Refreshed access tokens respect the configured `access_token_max_age` ([@masenf][])
+
+[@masenf]: https://github.com/masenf
+
+## v0.4.5 - 2026-06-21
+
+- Issue `id_tokens` when requesting new tokens with a refresh token ([@apollo13][]).
+
+[@apollo13]: https://github.com/apollo13
+
+## v0.4.4 - 2026-05-28
+
+- Don't expose private key on `/jwks` endpoint.
+
+## v0.4.3 - 2026-05-13
+
+- Add support for public (i.e. unauthenticated) clients
+- Respect forwarded host, protocol, and port headers when generating OpenID configuration URLs ([@danielalvsaaker][]).
+- Add support for Authlib v1.7
+
+[@danielalvsaaker]: https://github.com/danielalvsaaker
+
+## v0.4.2 - 2026-05-04
+
+- Added `--user-claims-file` option which allows loading user claims as a YAML/JSON file ([@bmispelon][], [@ghbm-itk][]).
+
+[@bmispelon]: https://github.com/bmispelon
+[@ghbm-tik]: https://github.com/ghbm-itk
+
+## v0.4.1 - 2026-04-12
+
+- Add CORS headers ([@tjarbo][])
+
+## v0.4.0 - 2026-03-27
+
+- Update authorization UI ([@Kenneth-Sills][])
+- Require Python >=3.12 and Pydantic >=2.3
+
+[@Kenneth-Sills]: https://github.com/Kenneth-Sills
+
+## v0.3.4 - 2026-01-25
+
+- Publish arm64 container images ([@tjarbo][])
+
+[@tjarbo]: https://github.com/tjarbo
+
+## v0.3.3 - 2025-12-20
+
+- Suppress deprecation warning introduced in Authlib v1.6.6.
+
+## v0.3.2 - 2025-11-24
+
+- Add required `subject_types_supported` field to OpenID configuration document.
+
+## v0.3.1 - 2025-10-24
+
+- Implement [`end_session_endpoint'](https://openid.net/specs/openid-connect-rpinitiated-1_0.html)
+
+## v0.3.0 - 2025-10-10
+
+- Allow static configuration of users with `--user` and `--user-claims` options.
+  These users can be authenticated with one click.
+
+## v0.2.9 - 2025-10-05
+
+- Add `kid` field to JWT header ([#54][], [@rimi-itk][])
+
+[#54]: https://github.com/geigerzaehler/oidc-provider-mock/issues/54
+[@rimi-itk]: https://github.com/rimi-itk
+
+## v0.2.8 - 2025-10-02
+
+- Show 20 most recently authenticated subjects in auth form
+- Return an error when the redirect URI is missing for an anonymous client.
+
+## v0.2.7 - 2025-09-12
+
+- Allow HTTP for all server and client hosts when running server from the CLI
+- Inform user how to fix "InsecureTransportError" when using the library
+
+## v0.2.6 - 2025-08-01
+
+- Add `--host` option to CLI
+- Drop support for Authlib v1.4
+- Display more detailed error message when client_id is wrong or missing
+- Don’t log stack traces on client errors
+
+## v0.2.5 - 2025-05-27
+
+- Suppress deprecation warnings introduced in Authlib v1.6.
+
+## v0.2.4 - 2025-04-19
+
+- Suppress exception logging on client errors in token endpoint.
+- Use correct error code "invalid_grant" when refresh token is not valid.
+
+## v0.2.3 - 2025-04-18
+
+- Add HTTP endpoint to revoke all tokens for a user.
+
+## v0.2.2 - 2025-04-14
+
+- Set initial focus to `sub` input in authorization form.
+
+## v0.2.1 - 2025-03-20
+
+- Add required `httpx` production dependency.

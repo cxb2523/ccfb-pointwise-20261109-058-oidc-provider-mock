@@ -1,0 +1,20 @@
+@import url("https://cdn.jsdelivr.net/npm/css-device-frames@1/dist/device-frames.min.css");
+
+.sy-head-blur {
+  backdrop-filter: none;
+  background-color: var(--sand-1);
+}
+.sy-head .searchbox {
+  display: none;
+}
+
+.sy-head .theme-switch {
+  display: none;
+}
+
+.sy-breadcrumbs {
+  display: none;
+}
+.sy-main .navigation {
+  display: none;
+}

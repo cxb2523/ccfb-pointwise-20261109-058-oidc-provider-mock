@@ -1,0 +1,159 @@
+[project]
+name = "oidc-provider-mock"
+version = "0.4.8"
+description = "OpenID Connect provider server for testing authentication"
+authors = [{ name = "Thomas Scholtes", email = "geigerzaehler@axiom.fm" }]
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+keywords = [
+  "OpenID Connect",
+  "OIDC",
+  "mock",
+  "OAuth",
+  "testing",
+  "development",
+  "authentication",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Software Development :: Testing :: Mocking",
+  "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+  "Topic :: Security",
+]
+dependencies = [
+  "authlib>=1.5",
+  "flask>=3.1",
+  "httpx2>=2.0",
+  "htpy>=25.2.0",
+  "joserfc>=1.0.3",
+  "pydantic>=2.3",
+  "pyyaml>=6.0.1",
+  "typing-extensions>=4.0",
+  "uvicorn>=0.30.0",
+]
+
+[project.scripts]
+oidc-provider-mock = "oidc_provider_mock.__main__:run"
+
+[project.urls]
+# https://packaging.python.org/en/latest/specifications/well-known-project-urls/#well-known-labels
+Homepage = "https://github.com/geigerzaehler/oidc-provider-mock"
+Documentation = "https://github.com/geigerzaehler/oidc-provider-mock"
+Source = "https://github.com/geigerzaehler/oidc-provider-mock"
+Issues = "https://github.com/geigerzaehler/oidc-provider-mock/issues"
+
+[dependency-groups]
+dev = [
+  "faker~=40.4",
+  "flask-oidc~=2.4",
+  "httpx~=0.28.1",
+  "myst-parser~=5.0",
+  "pyright==1.1.414",
+  "pytest-cov~=7.0",
+  "pytest-flask~=1.3",
+  "pytest-playwright~=0.10.0",
+  "pytest-randomly~=5.0",
+  "pytest-watcher~=0.6.3",
+  "pytest~=9.1",
+  "ruff==0.17.0",
+  "shibuya~=2026.1",
+  "sphinx-autobuild~=2025.8",
+  "sphinx~=9.1",
+  "typeguard~=4.4",
+  "freezegun~=1.5",
+  "ipython~=9.10",
+  "inline-snapshot~=0.36.0"
+]
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+addopts = """\
+  --verbose \
+  --cov-report term
+  --cov-report html
+  --tb=short
+  --doctest-modules
+  --tracing=retain-on-failure
+  --pdbcls=IPython.terminal.debugger:TerminalPdb
+  -p no:pytest_flask
+  """
+python_files = ["*_test.py", "*/examples/*.py"]
+python_classes = ""
+filterwarnings = [
+  "error",
+  "ignore:Cannot resolve forward reference 'Response':typeguard.TypeHintWarning",
+]
+markers = [
+  "provider_config", # Configure provider with certain options
+]
+typeguard-debug-instrumentation = true
+typeguard-forward-ref-policy = "WARN"
+typeguard-collection-check-strategy = "ALL_ITEMS"
+# pytest-flask
+live_server_scope = "function"
+
+[tool.inline-snapshot]
+format-command = "ruff format --stdin-filename {filename} -"
+
+[tool.ruff.format]
+preview = true
+
+[tool.ruff.lint]
+preview = true
+extend-select = [
+  "I",
+  "UP",
+  "PT",
+  "PIE",
+  "B",
+  "SIM",
+  "TCH",
+  "T20",
+  "RUF",
+  "C4",   # List comprehension
+  "DTZ",
+  "FURB",
+]
+ignore = [
+  # Pyright checks for unused imports and does it better.
+  "unused-import",
+  # contextlib.suppress() is less explicit
+  "suppressible-exception",
+  # ternary is often less readable
+  "if-else-block-instead-of-if-exp",
+  # Ignore ambigious unicode characters
+  "ambiguous-unicode-character-string",
+  "ambiguous-unicode-character-docstring",
+  "ambiguous-unicode-character-comment",
+  # ClassVar annotations are to verbose
+  "mutable-class-default",
+  # It’s ok to reimplement operators in lambdas. The lambda is more explicit and
+  # easier to understand.
+  "reimplemented-operator",
+]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+reportMissingTypeStubs = "none"
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportUnusedClass = "warning"
+reportUnusedImport = "warning"
+reportUnusedFunction = "none"
+reportUnusedVariable = "warning"
+
+[tool.coverage.run]
+branch = true

@@ -1,0 +1,149 @@
+{% extends "_base.html" %}
+
+{% macro identity_list(subjects) %}
+  <ul class="saved-identity-list">
+    {% for subject in subjects %}
+      <li>
+        <form method="post">
+          <button class="authorize-button"
+                  type="submit"
+                  name="sub"
+                  aria-label="Authorize as {{ subject }}"
+                  value="{{ subject }}"
+                  title="{{ subject }}">
+            <span>{{ subject }}</span>
+          </button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% endmacro %}
+
+{% block content %}
+  <hgroup>
+    <h1>Authorize Client</h1>
+    <p>Choose an identity to use.</p>
+  </hgroup>
+
+  <article>
+    {% if predefined_users %}
+      <section aria-labelledby="heading-auth-predefined">
+
+        <h3 id="heading-auth-predefined">Predefined users</h3>
+        {{ identity_list(predefined_users) }}
+      </section>
+    {% endif %}
+
+    <section>
+      <h3>Custom user</h3>
+      <form method="post">
+        <fieldset role="group">
+          <input id="subject-input"
+                 type="text"
+                 name="sub"
+                 placeholder="Subject"
+                 aria-label="Subject"
+                 required
+                 autofocus />
+          <button type="submit">Authorize</button>
+        </fieldset>
+      </form>
+    </section>
+
+    {% if recent_subjects %}
+      <section aria-labelledby="heading-auth-previous">
+        <h3 id="heading-auth-previous">Recent users</h3>
+        {{ identity_list(recent_subjects) }}
+      </section>
+    {% endif %}
+
+    <hr>
+
+    <form method="post">
+      <button type="submit"
+              name="action"
+              value="deny"
+              class="secondary"
+              style="width: auto;
+                     margin-bottom: 0">Deny access</button>
+    </form>
+  </article>
+
+  <article aria-labelledby="heading-client-info">
+    <h2 id="heading-client-info">Client info</h2>
+    <table class="request-details">
+      <tbody>
+        <tr>
+          <th scope="row">Client ID</th>
+          <td>
+            <code>{{ client_id }}</code>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Redirect URI</th>
+          <td>
+            <code>{{ redirect_uri }}</code>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Scopes</th>
+          <td>
+            {% for scope in scopes %}<code>{{ scope }}</code> {% endfor %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </article>
+
+  <style>
+      :root {
+          --pico-form-element-spacing-vertical: 0.5rem;
+          --pico-form-element-spacing-horizontal: 1rem;
+      }
+
+      .saved-identity-list {
+          padding: 0;
+      }
+
+      @media (min-width: 40rem) {
+          .saved-identity-list {
+              column-count: 2
+          }
+      }
+
+      .authorize-button {
+          display: flex;
+      }
+
+      .authorize-button>span {
+          white-space: nowrap;
+          flex-shrink: 1;
+          text-overflow: ellipsis;
+          overflow: hidden;
+      }
+
+      .authorize-button::after {
+          margin-left: auto;
+          padding-left: 1em;
+          content: "⮞";
+      }
+
+      .saved-identity-list>li {
+          list-style: none;
+      }
+
+      .request-details {
+          font-size: 0.9rem;
+      }
+
+      .request-details th {
+          text-align: right;
+          color: var(--pico-muted-color);
+          font-weight: 500;
+      }
+
+      .request-details tr:last-of-type * {
+          border-bottom: 0;
+      }
+  </style>
+{% endblock %}
